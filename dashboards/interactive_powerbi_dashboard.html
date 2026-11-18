@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brazilian E-Commerce Executive Analytics | Power BI Dark Dashboard</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-base: #0b111e;
+            --bg-card: #141e30;
+            --bg-card-hover: #1b2840;
+            --border-color: #24344d;
+            --accent-cyan: #00d2d3;
+            --accent-blue: #54a0ff;
+            --accent-orange: #ff9f43;
+            --accent-green: #10ac84;
+            --accent-red: #ee5253;
+            --text-primary: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 260px;
+            background-color: #0d1527;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .brand-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .brand-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 20px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-item:hover {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background-color: #1e293b;
+            color: var(--accent-cyan);
+            border-left: 4px solid var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Main Content Container */
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* Top Header */
+        .topbar {
+            height: 64px;
+            background-color: #0d1527;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .filters-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-select {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Dashboard Pages */
+        .page-content {
+            padding: 24px 28px;
+            display: none;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .page-content.active {
+            display: flex;
+        }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .kpi-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--accent-cyan);
+        }
+
+        .kpi-card.orange::before { background-color: var(--accent-orange); }
+        .kpi-card.green::before { background-color: var(--accent-green); }
+        .kpi-card.blue::before { background-color: var(--accent-blue); }
+        .kpi-card.red::before { background-color: var(--accent-red); }
+
+        .kpi-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 8px 0 4px 0;
+        }
+
+        .kpi-subtext {
+            font-size: 0.76rem;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-subtext.neutral { color: var(--text-muted); }
+        .kpi-subtext.warning { color: var(--accent-orange); }
+
+        /* Charts Grid */
+        .charts-grid-2 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 18px;
+        }
+
+        .charts-grid-equal {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .chart-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-header {
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chart-badge {
+            font-size: 0.7rem;
+            background-color: #1e293b;
+            color: var(--accent-cyan);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Custom Table */
+        .data-table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: #1e293b;
+            color: var(--text-muted);
+            padding: 12px 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #1a2638;
+            color: var(--text-primary);
+        }
+
+        .data-table tr:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        .segment-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+        .pill-champion { background: rgba(16, 172, 132, 0.2); color: #10ac84; }
+        .pill-loyal { background: rgba(84, 160, 255, 0.2); color: #54a0ff; }
+        .pill-potential { background: rgba(0, 210, 211, 0.2); color: #00d2d3; }
+        .pill-risk { background: rgba(238, 82, 83, 0.2); color: #ee5253; }
+        .pill-hibernating { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="brand-header">
+            <div class="brand-title">
+                <span>⚡ Olist Analytics</span>
+            </div>
+            <div class="brand-subtitle">Power BI Executive Suite</div>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item active" onclick="switchPage('page1', this)">
+                <span>📊</span> Executive Overview
+            </li>
+            <li class="nav-item" onclick="switchPage('page2', this)">
+                <span>👥</span> Customer Insights
+            </li>
+            <li class="nav-item" onclick="switchPage('page3', this)">
+                <span>🎯</span> Customer Segmentation (RFM)
+            </li>
+            <li class="nav-item" onclick="switchPage('page4', this)">
+                <span>📦</span> Product & Sales Analysis
+            </li>
+            <li class="nav-item" onclick="switchPage('page5', this)">
+                <span>🔄</span> Retention & Logistics SLA
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            Data Source: Brazilian E-Commerce<br>
+            Status: Fully Validated Relational Model
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="page-title" id="pageHeaderTitle">Page 1: Executive Overview</div>
+            <div class="filters-group">
+                <select class="filter-select">
+                    <option>Year: All (2016-2018)</option>
+                    <option>Year: 2017</option>
+                    <option>Year: 2018</option>
+                </select>
+                <select class="filter-select">
+                    <option>Status: Delivered Only (100%)</option>
+                </select>
+                <select class="filter-select">
+                    <option>State: All States (BR)</option>
+                    <option>São Paulo (SP)</option>
+                    <option>Rio de Janeiro (RJ)</option>
+                    <option>Minas Gerais (MG)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- PAGE 1: EXECUTIVE OVERVIEW -->
+        <div class="page-content active" id="page1">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Gross Revenue (GMV)</div>
+                    <div class="kpi-value">R$ 15.42M</div>
+                    <div class="kpi-subtext">Product: R$ 13.22M | Freight: R$ 2.20M</div>
+                </div>
+                <div class="kpi-card blue">
+                    <div class="kpi-label">Delivered Orders</div>
+                    <div class="kpi-value">96,478</div>
+                    <div class="kpi-subtext">97.02% of all placed orders</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-label">Unique Active Customers</div>
+                    <div class="kpi-value">93,358</div>
+                    <div class="kpi-subtext neutral">96,096 Total Lifecycle Base</div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-label">Average Order Value (AOV)</div>
+                    <div class="kpi-value">R$ 159.83</div>
+                    <div class="kpi-subtext">Item AOV: R$ 137.04</div>
+                </div>
+            </div>
+
+            <div class="charts-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Monthly Revenue & Order Volume Growth (2017 - 2018)</div>
+                        <div class="chart-badge">Historical Trajectory</div>
+                    </div>
+                    <div style="height: 280px;">
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Top 5 Categories by Revenue</div>
+                        <div class="chart-badge">Leaderboard</div>
+                    </div>
+                    <div style="height: 280px;">
+                        <canvas id="topCatChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">Geographical Customer & Revenue Distribution by Brazilian State</div>
+                    <div class="chart-badge">Regional Dominance</div>
+                </div>
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>State Code</th>
+                                <th>Unique Customers</th>
+                                <th>Delivered Orders</th>
+                                <th>Product Revenue (BRL)</th>
+                                <th>Freight Value (BRL)</th>
+                                <th>Gross Revenue (BRL)</th>
+                                <th>Market Share (%)</th>
+                                <th>Freight Ratio (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>SP (São Paulo)</strong></td>
+                                <td>39,156</td>
+                                <td>40,501</td>
+                                <td>R$ 5,067,633.16</td>
+                                <td>R$ 702,069.99</td>
+                                <td>R$ 5,769,703.15</td>
+                                <td>38.33%</td>
+                                <td>13.85%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>RJ (Rio de Janeiro)</strong></td>
+                                <td>11,917</td>
+                                <td>12,350</td>
+                                <td>R$ 1,759,651.13</td>
+                                <td>R$ 295,750.44</td>
+                                <td>R$ 2,055,401.57</td>
+                                <td>13.31%</td>
+                                <td>16.81%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>MG (Minas Gerais)</strong></td>
+                                <td>11,001</td>
+                                <td>11,354</td>
+                                <td>R$ 1,552,481.83</td>
+                                <td>R$ 266,409.84</td>
+                                <td>R$ 1,818,891.67</td>
+                                <td>11.74%</td>
+                                <td>17.16%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>RS (Rio Grande do Sul)</strong></td>
+                                <td>5,168</td>
+                                <td>5,345</td>
+                                <td>R$ 728,897.47</td>
+                                <td>R$ 132,575.32</td>
+                                <td>R$ 861,472.79</td>
+                                <td>5.51%</td>
+                                <td>18.19%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>PR (Paraná)</strong></td>
+                                <td>4,769</td>
+                                <td>4,923</td>
+                                <td>R$ 666,063.51</td>
+                                <td>R$ 115,645.29</td>
+                                <td>R$ 781,708.80</td>
+                                <td>5.04%</td>
+                                <td>17.36%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 2: CUSTOMER INSIGHTS -->
+        <div class="page-content" id="page2">
+            <div class="kpi-grid">
+                <div class="kpi-card blue">
+                    <div class="kpi-label">Unique Human Customers</div>
+                    <div class="kpi-value">96,096</div>
+                    <div class="kpi-subtext neutral">Individual entities identified</div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-label">Repeat Purchase Rate</div>
+                    <div class="kpi-value">3.00%</div>
+                    <div class="kpi-subtext warning">2,801 returning buyers</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-label">Average Customer Spend (CLV)</div>
+                    <div class="kpi-value">R$ 165.17</div>
+                    <div class="kpi-subtext">Lifetime spend per customer</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Top 1% Customer Spend Threshold</div>
+                    <div class="kpi-value">R$ 1,004.88</div>
+                    <div class="kpi-subtext">Max Single Spender: R$ 13,664</div>
+                </div>
+            </div>
+
+            <div class="charts-grid-equal">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">New vs. Returning Customer Share</div>
+                        <div class="chart-badge">Retention Deficit</div>
+                    </div>
+                    <div style="height: 260px;">
+                        <canvas id="retentionDonutChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Top 10 Brazilian States by Customer Concentration</div>
+                        <div class="chart-badge">Geographic Reach</div>
+                    </div>
+                    <div style="height: 260px;">
+                        <canvas id="stateConcentrationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 3: CUSTOMER SEGMENTATION (RFM) -->
+        <div class="page-content" id="page3">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Potential Loyalists (High Spend)</div>
+                    <div class="kpi-value">21,889</div>
+                    <div class="kpi-subtext">23.5% of base | R$ 5.17M (33.5% GMV)</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-label">Champions (VIP Segment)</div>
+                    <div class="kpi-value">990</div>
+                    <div class="kpi-subtext">Avg Spend: R$ 372.04 | R$ 368k GMV</div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-label">Cannot Lose Them (High Churn Risk)</div>
+                    <div class="kpi-value">750</div>
+                    <div class="kpi-subtext warning">Avg Spend: R$ 353.99 | Inactive > 380d</div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-label">Hibernating Customer Base</div>
+                    <div class="kpi-value">54,333</div>
+                    <div class="kpi-subtext neutral">58.2% of base | R$ 8.60M GMV</div>
+                </div>
+            </div>
+
+            <div class="charts-grid-equal">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Customer Share vs. Revenue Share by RFM Segment</div>
+                        <div class="chart-badge">Comparative Alignment</div>
+                    </div>
+                    <div style="height: 280px;">
+                        <canvas id="rfmComparisonChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Average Spending by Customer Segment (BRL)</div>
+                        <div class="chart-badge">Monetary Value</div>
+                    </div>
+                    <div style="height: 280px;">
+                        <canvas id="rfmSpendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">RFM Strategic Segment Matrix & Playbook</div>
+                    <div class="chart-badge">Action Plan</div>
+                </div>
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Segment Name</th>
+                                <th>Customers</th>
+                                <th>Customer %</th>
+                                <th>Total GMV</th>
+                                <th>Revenue %</th>
+                                <th>Avg Spend</th>
+                                <th>Avg Recency</th>
+                                <th>Strategic Marketing Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="segment-pill pill-champion">Champions</span></td>
+                                <td>990</td>
+                                <td>1.06%</td>
+                                <td>R$ 368,322.77</td>
+                                <td>2.39%</td>
+                                <td>R$ 372.04</td>
+                                <td>88.8 days</td>
+                                <td>VIP program, priority service, early access to new releases</td>
+                            </tr>
+                            <tr>
+                                <td><span class="segment-pill pill-loyal">Loyal Customers</span></td>
+                                <td>823</td>
+                                <td>0.88%</td>
+                                <td>R$ 207,127.63</td>
+                                <td>1.34%</td>
+                                <td>R$ 251.67</td>
+                                <td>183.9 days</td>
+                                <td>Cross-sell related accessories, multi-item bundle incentives</td>
+                            </tr>
+                            <tr>
+                                <td><span class="segment-pill pill-potential">Potential Loyalists</span></td>
+                                <td>21,889</td>
+                                <td>23.45%</td>
+                                <td>R$ 5,169,680.16</td>
+                                <td>33.53%</td>
+                                <td>R$ 236.18</td>
+                                <td>91.2 days</td>
+                                <td><strong>#1 Growth Lever:</strong> 14-day post-delivery nurture & 2nd order promo</td>
+                            </tr>
+                            <tr>
+                                <td><span class="segment-pill pill-loyal">New Customers</span></td>
+                                <td>14,335</td>
+                                <td>15.35%</td>
+                                <td>R$ 782,998.99</td>
+                                <td>5.08%</td>
+                                <td>R$ 54.62</td>
+                                <td>89.8 days</td>
+                                <td>App onboarding series, product catalog discovery discounts</td>
+                            </tr>
+                            <tr>
+                                <td><span class="segment-pill pill-risk">Cannot Lose Them</span></td>
+                                <td>750</td>
+                                <td>0.80%</td>
+                                <td>R$ 265,495.73</td>
+                                <td>1.72%</td>
+                                <td>R$ 353.99</td>
+                                <td>380.5 days</td>
+                                <td>High-touch executive win-back discounts & satisfaction review</td>
+                            </tr>
+                            <tr>
+                                <td><span class="segment-pill pill-hibernating">Hibernating</span></td>
+                                <td>54,333</td>
+                                <td>58.20%</td>
+                                <td>R$ 8,602,907.14</td>
+                                <td>55.79%</td>
+                                <td>R$ 158.34</td>
+                                <td>337.1 days</td>
+                                <td>Automated low-frequency clearance emails; list hygiene purge</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 4: PRODUCT & SALES ANALYSIS -->
+        <div class="page-content" id="page4">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Highest GMV Category</div>
+                    <div class="kpi-value">Health Beauty</div>
+                    <div class="kpi-subtext">R$ 1,233,131.72 (9,465 units)</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-label">Highest Volume Category</div>
+                    <div class="kpi-value">Bed Bath Table</div>
+                    <div class="kpi-subtext">10,953 items sold (R$ 1.02M)</div>
+                </div>
+                <div class="kpi-card blue">
+                    <div class="kpi-label">Credit Card Share</div>
+                    <div class="kpi-value">78.5%</div>
+                    <div class="kpi-subtext">R$ 12.10M | Avg 3.5 installments</div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-label">Boleto Bancário Share</div>
+                    <div class="kpi-value">18.0%</div>
+                    <div class="kpi-subtext">R$ 2.77M | Cash invoice payment</div>
+                </div>
+            </div>
+
+            <div class="charts-grid-equal">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Payment Method Share by Monetary Value</div>
+                        <div class="chart-badge">Payment Rails</div>
+                    </div>
+                    <div style="height: 260px;">
+                        <canvas id="paymentDonutChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Credit Card Financing Installments Distribution</div>
+                        <div class="chart-badge">Consumer Credit</div>
+                    </div>
+                    <div style="height: 260px;">
+                        <canvas id="installmentsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 5: CUSTOMER RETENTION & LOGISTICS SLA -->
+        <div class="page-content" id="page5">
+            <div class="kpi-grid">
+                <div class="kpi-card green">
+                    <div class="kpi-label">On-Time Delivery SLA</div>
+                    <div class="kpi-value">91.89%</div>
+                    <div class="kpi-subtext">Delivered on or before estimated date</div>
+                </div>
+                <div class="kpi-card blue">
+                    <div class="kpi-label">Median Delivery Lead Time</div>
+                    <div class="kpi-value">10.2 Days</div>
+                    <div class="kpi-subtext">Estimated promise: 23.2 Days</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">On-Time Delivery Review Score</div>
+                    <div class="kpi-value">4.29 ★</div>
+                    <div class="kpi-subtext">High customer satisfaction</div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-label">Delayed Delivery Review Score</div>
+                    <div class="kpi-value">2.57 ★</div>
+                    <div class="kpi-subtext warning">-1.72 ★ drop due to shipping delays</div>
+                </div>
+            </div>
+
+            <div class="charts-grid-equal">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Customer Review Score: On-Time vs Delayed Deliveries</div>
+                        <div class="chart-badge">Impact of Logistics</div>
+                    </div>
+                    <div style="height: 260px;">
+                        <canvas id="reviewImpactChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Hourly Shopping Peak Volume (24h Window)</div>
+                        <div class="chart-badge">Peak Hours</div>
+                    </div>
+                    <div style="height: 260px;">
+                        <canvas id="hourlyShoppingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">Monthly Customer Cohort Retention Matrix (2017 Cohorts)</div>
+                    <div class="chart-badge">Cohort Survival</div>
+                </div>
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Cohort</th>
+                                <th>Size</th>
+                                <th>Month 1</th>
+                                <th>Month 2</th>
+                                <th>Month 3</th>
+                                <th>Month 4</th>
+                                <th>Month 5</th>
+                                <th>Month 6</th>
+                                <th>M+1 Retention %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>2017-01</td><td>718</td><td>2</td><td>2</td><td>1</td><td>3</td><td>1</td><td>3</td><td>0.28%</td></tr>
+                            <tr><td>2017-02</td><td>1,628</td><td>3</td><td>5</td><td>2</td><td>7</td><td>2</td><td>4</td><td>0.18%</td></tr>
+                            <tr><td>2017-03</td><td>2,503</td><td>11</td><td>9</td><td>10</td><td>9</td><td>4</td><td>4</td><td>0.44%</td></tr>
+                            <tr><td>2017-04</td><td>2,257</td><td>14</td><td>5</td><td>4</td><td>6</td><td>6</td><td>8</td><td>0.62%</td></tr>
+                            <tr><td>2017-05</td><td>3,451</td><td>16</td><td>16</td><td>10</td><td>10</td><td>11</td><td>14</td><td>0.46%</td></tr>
+                            <tr><td>2017-06</td><td>3,037</td><td>15</td><td>12</td><td>13</td><td>9</td><td>12</td><td>11</td><td>0.49%</td></tr>
+                            <tr><td>2017-07</td><td>3,753</td><td>20</td><td>13</td><td>9</td><td>11</td><td>8</td><td>12</td><td>0.53%</td></tr>
+                            <tr><td>2017-08</td><td>4,057</td><td>28</td><td>14</td><td>11</td><td>14</td><td>21</td><td>12</td><td>0.69%</td></tr>
+                            <tr><td>2017-09</td><td>4,005</td><td>28</td><td>22</td><td>11</td><td>18</td><td>9</td><td>9</td><td>0.70%</td></tr>
+                            <tr><td>2017-10</td><td>4,328</td><td>31</td><td>11</td><td>4</td><td>10</td><td>9</td><td>9</td><td>0.72%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Configuration Script -->
+    <script>
+        function switchPage(pageId, navEl) {
+            document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            navEl.classList.add('active');
+            
+            const titles = {
+                'page1': 'Page 1: Executive Overview',
+                'page2': 'Page 2: Customer Insights & Demographics',
+                'page3': 'Page 3: Customer Segmentation (RFM Analysis)',
+                'page4': 'Page 4: Product & Sales Performance',
+                'page5': 'Page 5: Customer Retention & Logistics SLA'
+            };
+            document.getElementById('pageHeaderTitle').innerText = titles[pageId];
+        }
+
+        // Global Chart Defaults for Dark Theme
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = '#1e293b';
+
+        // Page 1: Monthly Trend
+        const ctxMonthly = document.getElementById('monthlyTrendChart').getContext('2d');
+        new Chart(ctxMonthly, {
+            type: 'bar',
+            data: {
+                labels: ['Jan 17', 'Mar 17', 'May 17', 'Jul 17', 'Sep 17', 'Nov 17', 'Jan 18', 'Mar 18', 'May 18', 'Jul 18', 'Aug 18'],
+                datasets: [
+                    {
+                        label: 'Gross Revenue (Thousand R$)',
+                        data: [127.5, 414.3, 566.9, 566.3, 701.1, 1153.4, 1078.6, 1120.7, 1153.9, 1027.8, 985.4],
+                        backgroundColor: '#00d2d3',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Order Volume',
+                        data: [750, 2546, 3546, 3872, 4150, 7288, 6890, 7003, 6749, 6159, 6351],
+                        type: 'line',
+                        borderColor: '#ff9f43',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ff9f43',
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { title: { display: true, text: 'Revenue (k R$)' } },
+                    y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Orders' } }
+                }
+            }
+        });
+
+        // Page 1: Top Categories
+        const ctxTopCat = document.getElementById('topCatChart').getContext('2d');
+        new Chart(ctxTopCat, {
+            type: 'bar',
+            data: {
+                labels: ['Health Beauty', 'Watches Gifts', 'Bed Bath Table', 'Sports Leisure', 'Computers Acc.'],
+                datasets: [{
+                    label: 'Revenue (k R$)',
+                    data: [1233.1, 1166.2, 1023.4, 954.9, 888.7],
+                    backgroundColor: '#54a0ff',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Page 2: Retention Donut
+        const ctxRet = document.getElementById('retentionDonutChart').getContext('2d');
+        new Chart(ctxRet, {
+            type: 'doughnut',
+            data: {
+                labels: ['One-Time Buyers (97.0%)', 'Repeat Customers (3.0%)'],
+                datasets: [{
+                    data: [90557, 2801],
+                    backgroundColor: ['#1e293b', '#ff9f43'],
+                    borderWidth: 2,
+                    borderColor: '#141e30'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // Page 2: State Concentration
+        const ctxState = document.getElementById('stateConcentrationChart').getContext('2d');
+        new Chart(ctxState, {
+            type: 'bar',
+            data: {
+                labels: ['SP', 'RJ', 'MG', 'RS', 'PR', 'SC', 'BA', 'DF', 'GO', 'ES'],
+                datasets: [{
+                    label: 'Customers (%)',
+                    data: [42.0, 12.9, 11.7, 5.5, 5.1, 3.7, 3.4, 2.1, 2.0, 2.0],
+                    backgroundColor: '#00d2d3',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Page 3: RFM Comparison
+        const ctxRfmComp = document.getElementById('rfmComparisonChart').getContext('2d');
+        new Chart(ctxRfmComp, {
+            type: 'bar',
+            data: {
+                labels: ['Hibernating', 'Potential Loyalists', 'New Customers', 'Champions', 'Cannot Lose', 'Loyal', 'At Risk'],
+                datasets: [
+                    { label: 'Customer Share (%)', data: [58.2, 23.5, 15.3, 1.1, 0.8, 0.9, 0.3], backgroundColor: '#54a0ff' },
+                    { label: 'Revenue Share (%)', data: [55.8, 33.5, 5.1, 2.4, 1.7, 1.3, 0.2], backgroundColor: '#10ac84' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Page 3: RFM Spend
+        const ctxRfmSpend = document.getElementById('rfmSpendChart').getContext('2d');
+        new Chart(ctxRfmSpend, {
+            type: 'bar',
+            data: {
+                labels: ['Champions', 'Cannot Lose Them', 'Loyal Customers', 'Potential Loyalists', 'Hibernating', 'At Risk', 'New Customers'],
+                datasets: [{
+                    label: 'Average Spend (BRL)',
+                    data: [372.04, 353.99, 251.67, 236.18, 158.34, 97.65, 54.62],
+                    backgroundColor: ['#10ac84', '#ee5253', '#54a0ff', '#00d2d3', '#64748b', '#ff9f43', '#94a3b8'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Page 4: Payment Donut
+        const ctxPay = document.getElementById('paymentDonutChart').getContext('2d');
+        new Chart(ctxPay, {
+            type: 'doughnut',
+            data: {
+                labels: ['Credit Card (78.5%)', 'Boleto Bancário (18.0%)', 'Voucher (2.2%)', 'Debit Card (1.3%)'],
+                datasets: [{
+                    data: [12101094, 2769932, 343013, 208421],
+                    backgroundColor: ['#00d2d3', '#ff9f43', '#54a0ff', '#ee5253'],
+                    borderWidth: 2,
+                    borderColor: '#141e30'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // Page 4: Installments
+        const ctxInst = document.getElementById('installmentsChart').getContext('2d');
+        new Chart(ctxInst, {
+            type: 'bar',
+            data: {
+                labels: ['1x', '2x', '3x', '4x', '5x', '6x', '7x', '8x', '9x', '10x'],
+                datasets: [{
+                    label: 'Transactions',
+                    data: [25404, 12413, 10461, 7098, 5236, 3920, 1627, 2268, 644, 5328],
+                    backgroundColor: '#54a0ff',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Page 5: Review Impact
+        const ctxRev = document.getElementById('reviewImpactChart').getContext('2d');
+        new Chart(ctxRev, {
+            type: 'bar',
+            data: {
+                labels: ['On-Time / Early Deliveries', 'Delayed Deliveries (> Promised Date)'],
+                datasets: [{
+                    label: 'Average Customer Review Rating (out of 5)',
+                    data: [4.29, 2.57],
+                    backgroundColor: ['#10ac84', '#ee5253'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { min: 0, max: 5 } }
+            }
+        });
+
+        // Page 5: Hourly Shopping
+        const ctxHour = document.getElementById('hourlyShoppingChart').getContext('2d');
+        new Chart(ctxHour, {
+            type: 'line',
+            data: {
+                labels: ['0h','2h','4h','6h','8h','10h','12h','14h','16h','18h','20h','22h'],
+                datasets: [{
+                    label: 'Orders Placed',
+                    data: [812, 172, 103, 502, 2963, 6314, 6125, 6898, 7254, 6215, 6812, 5816],
+                    borderColor: '#00d2d3',
+                    backgroundColor: 'rgba(0, 210, 211, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
+</body>
+</html>

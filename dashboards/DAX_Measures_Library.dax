@@ -1,0 +1,168 @@
+/* ==============================================================================
+   POWER BI DAX MEASURE SPECIFICATION & FORMULAS
+   Brazilian E-Commerce Customer Analysis (Olist)
+   Theme: Obsidian Dark Executive Analytics
+   ============================================================================== */
+
+// -----------------------------------------------------------------------------
+// 1. EXECUTIVE & FINANCIAL CORE METRICS
+// -----------------------------------------------------------------------------
+
+Total Delivered Orders = 
+CALCULATE(
+    DISTINCTCOUNT(orders[order_id]),
+    orders[order_status] = "delivered"
+)
+
+Total Customers = 
+CALCULATE(
+    DISTINCTCOUNT(customers[customer_unique_id]),
+    orders[order_status] = "delivered"
+)
+
+Total Product Revenue = 
+CALCULATE(
+    SUM(order_items[price]),
+    orders[order_status] = "delivered"
+)
+
+Total Freight Revenue = 
+CALCULATE(
+    SUM(order_items[freight_value]),
+    orders[order_status] = "delivered"
+)
+
+Total Gross Revenue = 
+[Total Product Revenue] + [Total Freight Revenue]
+
+Average Order Value (AOV) = 
+DIVIDE([Total Gross Revenue], [Total Delivered Orders], 0)
+
+Average Product Basket Value = 
+DIVIDE([Total Product Revenue], [Total Delivered Orders], 0)
+
+Freight to Revenue Ratio = 
+DIVIDE([Total Freight Revenue], [Total Product Revenue], 0)
+
+// -----------------------------------------------------------------------------
+// 2. TIME INTELLIGENCE & MOM GROWTH
+// -----------------------------------------------------------------------------
+
+Previous Month Gross Revenue = 
+CALCULATE(
+    [Total Gross Revenue],
+    DATEADD(orders[order_purchase_date], -1, MONTH)
+)
+
+MoM Revenue Growth % = 
+VAR PrevMonthRev = [Previous Month Gross Revenue]
+VAR CurrentMonthRev = [Total Gross Revenue]
+RETURN
+DIVIDE(CurrentMonthRev - PrevMonthRev, PrevMonthRev, 0)
+
+Cumulative Revenue YTD = 
+TOTALYTD(
+    [Total Gross Revenue],
+    orders[order_purchase_date]
+)
+
+// -----------------------------------------------------------------------------
+// 3. CUSTOMER RETENTION & LIFETIME VALUE
+// -----------------------------------------------------------------------------
+
+Customer Lifetime Value (Avg Spend) = 
+DIVIDE([Total Gross Revenue], [Total Customers], 0)
+
+Repeat Customers Count = 
+CALCULATE(
+    DISTINCTCOUNT(customers[customer_unique_id]),
+    FILTER(
+        VALUES(customers[customer_unique_id]),
+        CALCULATE(DISTINCTCOUNT(orders[order_id]), orders[order_status] = "delivered") > 1
+    )
+)
+
+One Time Customers Count = 
+[Total Customers] - [Repeat Customers Count]
+
+Repeat Purchase Rate % = 
+DIVIDE([Repeat Customers Count], [Total Customers], 0)
+
+// -----------------------------------------------------------------------------
+// 4. LOGISTICS & SATISFACTION METRICS
+// -----------------------------------------------------------------------------
+
+Average Delivery Lead Time (Days) = 
+CALCULATE(
+    AVERAGE(orders[delivery_lead_time_days]),
+    orders[order_status] = "delivered",
+    NOT(ISBLANK(orders[order_delivered_customer_date]))
+)
+
+Average Estimated Delivery Time (Days) = 
+CALCULATE(
+    AVERAGE(orders[estimated_delivery_days]),
+    orders[order_status] = "delivered"
+)
+
+Delayed Orders Count = 
+CALCULATE(
+    COUNTROWS(orders),
+    orders[order_status] = "delivered",
+    orders[is_delayed] = 1
+)
+
+On Time Delivery Rate % = 
+VAR TotalDelivered = [Total Delivered Orders]
+VAR DelayedCount = [Delayed Orders Count]
+RETURN
+DIVIDE(TotalDelivered - DelayedCount, TotalDelivered, 0)
+
+Average Review Rating = 
+CALCULATE(
+    AVERAGE(order_reviews[review_score]),
+    orders[order_status] = "delivered"
+)
+
+On Time Average Review Rating = 
+CALCULATE(
+    AVERAGE(order_reviews[review_score]),
+    orders[order_status] = "delivered",
+    orders[is_delayed] = 0
+)
+
+Delayed Average Review Rating = 
+CALCULATE(
+    AVERAGE(order_reviews[review_score]),
+    orders[order_status] = "delivered",
+    orders[is_delayed] = 1
+)
+
+// -----------------------------------------------------------------------------
+// 5. RFM SEGMENTATION METRICS
+// -----------------------------------------------------------------------------
+
+Champions Revenue = 
+CALCULATE(
+    [Total Gross Revenue],
+    rfm_segments[segment] = "Champions"
+)
+
+Potential Loyalists Revenue = 
+CALCULATE(
+    [Total Gross Revenue],
+    rfm_segments[segment] = "Potential Loyalists"
+)
+
+Hibernating Revenue = 
+CALCULATE(
+    [Total Gross Revenue],
+    rfm_segments[segment] = "Hibernating"
+)
+
+Segment Revenue Contribution % = 
+DIVIDE(
+    [Total Gross Revenue],
+    CALCULATE([Total Gross Revenue], ALL(rfm_segments[segment])),
+    0
+)
