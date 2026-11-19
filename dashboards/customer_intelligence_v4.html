@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce Customer Intelligence v4.0 | Asymmetric Bento Cockpit</title>
+    <!-- Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for Spline & Sunburst/Donut -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-obsidian: #0A0A0C;
+            --bg-slate: #111116;
+            --bg-card: rgba(17, 17, 22, 0.72);
+            --bg-card-hover: rgba(23, 23, 30, 0.88);
+            --border-cyber: #1D1D26;
+            --border-cyber-glow: rgba(13, 245, 227, 0.35);
+            
+            --teal-luminous: #0DF5E3;
+            --teal-glow: rgba(13, 245, 227, 0.22);
+            --amber-warm: #FFB800;
+            --amber-glow: rgba(255, 184, 0, 0.22);
+            --violet-soft: #8B5CFF;
+            --violet-glow: rgba(139, 92, 255, 0.22);
+            
+            --text-primary: #FFFFFF;
+            --text-secondary: #E4E4EB;
+            --text-muted: #8E8EA0;
+            --text-dim: #4E4E61;
+            
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-obsidian);
+            color: var(--text-secondary);
+            font-family: var(--font-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            background-image: 
+                radial-gradient(circle at 18% 12%, rgba(13, 245, 227, 0.045) 0%, transparent 45%),
+                radial-gradient(circle at 82% 85%, rgba(139, 92, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(255, 184, 0, 0.02) 0%, transparent 65%),
+                linear-gradient(rgba(29, 29, 38, 0.18) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(29, 29, 38, 0.18) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        /* 16:9 Aspect Ratio Master Frame */
+        .viewport-16-9 {
+            width: 100%;
+            max-width: 1720px;
+            aspect-ratio: 16 / 9;
+            min-height: 940px;
+            position: relative;
+            background: rgba(10, 10, 12, 0.94);
+            border: 1px solid var(--border-cyber);
+            border-radius: 28px;
+            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Ambient Corner Micro-Accents */
+        .viewport-16-9::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--teal-luminous), transparent 80%);
+            opacity: 0.6;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Floating Left Navigation Rail */
+        .nav-rail {
+            position: absolute;
+            top: 24px;
+            bottom: 24px;
+            left: 24px;
+            width: 72px;
+            background: rgba(17, 17, 22, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-cyber);
+            border-radius: 22px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            z-index: 40;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-rail:hover {
+            border-color: rgba(29, 29, 38, 0.9);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 24px rgba(13, 245, 227, 0.08);
+        }
+
+        .nav-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(13, 245, 227, 0.15), rgba(139, 92, 255, 0.1));
+            border: 1px solid rgba(13, 245, 227, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-weight: 800;
+            font-size: 15px;
+            color: var(--teal-luminous);
+            text-shadow: 0 0 12px var(--teal-glow);
+            box-shadow: 0 0 18px var(--teal-glow);
+            margin-bottom: 32px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nav-logo::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 16px;
+            border: 1px dashed rgba(13, 245, 227, 0.3);
+            animation: rotateGlow 14s linear infinite;
+        }
+
+        @keyframes rotateGlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .nav-items {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            align-items: center;
+            flex: 1;
+        }
+
+        .nav-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.22s ease;
+            position: relative;
+        }
+
+        .nav-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 1.8;
+            stroke: currentColor;
+            fill: none;
+            transition: all 0.22s ease;
+        }
+
+        .nav-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .nav-btn.active {
+            color: var(--teal-luminous);
+            background: rgba(13, 245, 227, 0.08);
+            border-color: rgba(13, 245, 227, 0.35);
+            box-shadow: 0 0 20px rgba(13, 245, 227, 0.22), inset 0 0 12px rgba(13, 245, 227, 0.12);
+        }
+
+        .nav-btn.active::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            width: 4px;
+            height: 20px;
+            background: var(--teal-luminous);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 10px var(--teal-luminous);
+        }
+
+        .nav-tooltip {
+            position: absolute;
+            left: 64px;
+            background: #15151C;
+            border: 1px solid var(--border-cyber);
+            color: var(--text-primary);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 6px;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(-6px);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+            z-index: 100;
+            font-family: var(--font-main);
+            letter-spacing: 0.3px;
+        }
+
+        .nav-btn:hover .nav-tooltip {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .nav-bottom {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* Top Header Breadcrumb & Status */
+        .top-header {
+            height: 64px;
+            margin-left: 116px;
+            margin-right: 32px;
+            margin-top: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 20;
+        }
+
+        .header-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .breadcrumb {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--teal-luminous);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .breadcrumb span {
+            color: var(--text-dim);
+        }
+
+        .system-title {
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .version-badge {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 6px;
+            background: rgba(139, 92, 255, 0.12);
+            color: var(--violet-soft);
+            border: 1px solid rgba(139, 92, 255, 0.3);
+            letter-spacing: 0.5px;
+        }
+
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .live-clock {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: rgba(17, 17, 22, 0.6);
+            border: 1px solid var(--border-cyber);
+            padding: 6px 14px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--teal-luminous);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--teal-luminous);
+            animation: pulseTeal 1.8s infinite;
+        }
+
+        @keyframes pulseTeal {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .user-avatar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 10px 4px 4px;
+            border-radius: 12px;
+            background: rgba(17, 17, 22, 0.6);
+            border: 1px solid var(--border-cyber);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .user-avatar-wrap:hover {
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #2b2b3a, #16161e);
+            border: 1px solid rgba(13, 245, 227, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--teal-luminous);
+        }
+
+        .user-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Bento Grid Main Canvas */
+        .bento-canvas {
+            flex: 1;
+            margin-left: 116px;
+            margin-right: 28px;
+            margin-bottom: 74px; /* Space for floating bottom dock */
+            display: grid;
+            grid-template-columns: 40% 35% 25%;
+            gap: 16px;
+            min-height: 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Generic Bento Card */
+        .bento-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-cyber);
+            border-radius: 20px;
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            overflow: hidden;
+        }
+
+        .bento-card:hover {
+            border-color: rgba(29, 29, 38, 0.95);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .card-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-tag {
+            width: 3px;
+            height: 14px;
+            border-radius: 2px;
+        }
+        .tag-teal { background: var(--teal-luminous); box-shadow: 0 0 8px var(--teal-luminous); }
+        .tag-violet { background: var(--violet-soft); box-shadow: 0 0 8px var(--violet-soft); }
+        .tag-amber { background: var(--amber-warm); box-shadow: 0 0 8px var(--amber-warm); }
+
+        .card-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.2px;
+        }
+
+        .card-subtext {
+            font-size: 10.5px;
+            color: var(--text-dim);
+            font-family: var(--font-mono);
+        }
+
+        .trend-pill {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .trend-pill.teal {
+            background: rgba(13, 245, 227, 0.1);
+            color: var(--teal-luminous);
+            border: 1px solid rgba(13, 245, 227, 0.3);
+        }
+        .trend-pill.amber {
+            background: rgba(255, 184, 0, 0.1);
+            color: var(--amber-warm);
+            border: 1px solid rgba(255, 184, 0, 0.3);
+        }
+        .trend-pill.violet {
+            background: rgba(139, 92, 255, 0.1);
+            color: var(--violet-soft);
+            border: 1px solid rgba(139, 92, 255, 0.3);
+        }
+
+        /* -------------------------------------------------------------------------
+           COLUMN 1 (40% width): Customer Cohort Retention Heatmap
+           ------------------------------------------------------------------------- */
+        .col-left-heatmap {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .heatmap-matrix-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            padding-top: 4px;
+        }
+
+        .heatmap-header-row {
+            display: grid;
+            grid-template-columns: 52px repeat(12, 1fr);
+            gap: 4px;
+            margin-bottom: 6px;
+            font-family: var(--font-mono);
+            font-size: 9.5px;
+            color: var(--text-dim);
+            text-align: center;
+        }
+
+        .heatmap-row {
+            display: grid;
+            grid-template-columns: 52px repeat(12, 1fr);
+            gap: 4px;
+            margin-bottom: 4px;
+            align-items: center;
+        }
+
+        .heatmap-cohort-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-align: left;
+            padding-left: 2px;
+        }
+
+        .heat-cell {
+            aspect-ratio: 1.35;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 8.5px;
+            font-weight: 700;
+            transition: all 0.18s ease;
+            cursor: pointer;
+            position: relative;
+            border: 1px solid transparent;
+        }
+
+        .heat-cell:hover {
+            transform: scale(1.15);
+            z-index: 30;
+            border-color: #FFFFFF;
+            box-shadow: 0 0 14px rgba(13, 245, 227, 0.6);
+        }
+
+        /* Heatmap Legend */
+        .heatmap-legend {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-dim);
+            font-family: var(--font-mono);
+        }
+
+        .legend-gradient-bar {
+            width: 140px;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, rgba(139, 92, 255, 0.15) 0%, rgba(139, 92, 255, 0.6) 40%, rgba(13, 245, 227, 0.65) 75%, rgba(13, 245, 227, 1) 100%);
+        }
+
+        /* -------------------------------------------------------------------------
+           COLUMN 2 (35% width): CLV & Revenue Trajectory (Layered 3D Spline)
+           ------------------------------------------------------------------------- */
+        .col-mid-clv {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .clv-chart-container {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Floating Frosted Tooltip over Mo 6 Data Peak */
+        .floating-peak-tooltip {
+            position: absolute;
+            top: 36%;
+            left: 56%;
+            background: rgba(18, 18, 25, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(139, 92, 255, 0.45);
+            border-radius: 12px;
+            padding: 8px 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(139, 92, 255, 0.25);
+            pointer-events: none;
+            z-index: 25;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            animation: floatGently 3.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatGently {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-5px); }
+        }
+
+        .tooltip-badge {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            color: var(--teal-luminous);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tooltip-val {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 800;
+            color: #FFFFFF;
+        }
+
+        .tooltip-sub {
+            font-size: 9.5px;
+            color: var(--violet-soft);
+            font-weight: 600;
+        }
+
+        .clv-metrics-strip {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+        }
+
+        .metric-delta {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--teal-luminous);
+            font-family: var(--font-mono);
+        }
+
+        /* -------------------------------------------------------------------------
+           COLUMN 3 (25% width): Stacked Widgets
+           ------------------------------------------------------------------------- */
+        .col-right-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            height: 100%;
+        }
+
+        /* Card 1: RFM Customer Segmentation (34% height) */
+        .card-rfm {
+            flex: 1.1;
+        }
+
+        .rfm-content-grid {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .rfm-donut-wrap {
+            width: 105px;
+            height: 105px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .donut-center-stat {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .donut-center-num {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 800;
+            color: #FFFFFF;
+        }
+
+        .donut-center-lbl {
+            font-size: 8px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-family: var(--font-mono);
+        }
+
+        .rfm-legend-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .rfm-legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .rfm-item-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+        }
+
+        .rfm-color-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .rfm-item-pct {
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            color: var(--text-primary);
+        }
+
+        /* Card 2: Conversion Funnel (32% height) */
+        .card-funnel {
+            flex: 1;
+        }
+
+        .funnel-steps-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .funnel-step {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .funnel-step-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .funnel-warn {
+            color: var(--amber-warm);
+            font-size: 9.5px;
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .funnel-bar-track {
+            height: 7px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .funnel-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Card 3: Top VIP Personas (34% height) */
+        .card-vip {
+            flex: 1.1;
+        }
+
+        .vip-list {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            flex: 1;
+            justify-content: space-between;
+        }
+
+        .vip-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .vip-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(13, 245, 227, 0.25);
+            transform: translateX(2px);
+        }
+
+        .vip-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .vip-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            border: 1px solid rgba(13, 245, 227, 0.4);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .vip-avatar::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 6px;
+            height: 6px;
+            background: var(--teal-luminous);
+            border-radius: 50%;
+            border: 1px solid #111116;
+        }
+
+        .vip-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .vip-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .vip-tag {
+            font-size: 8.5px;
+            font-family: var(--font-mono);
+            color: var(--teal-luminous);
+        }
+
+        .vip-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 3px;
+        }
+
+        .vip-spend {
+            font-family: var(--font-mono);
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .vip-micro-bar {
+            width: 48px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .vip-micro-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--violet-soft), var(--teal-luminous));
+            border-radius: 2px;
+        }
+
+        /* -------------------------------------------------------------------------
+           FLOATING BOTTOM COMMAND DOCK
+           ------------------------------------------------------------------------- */
+        .bottom-command-dock {
+            position: absolute;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(17, 17, 22, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(13, 245, 227, 0.28);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.75), 0 0 24px rgba(13, 245, 227, 0.12);
+            border-radius: 9999px;
+            padding: 7px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            z-index: 45;
+            transition: all 0.3s ease;
+        }
+
+        .bottom-command-dock:hover {
+            border-color: rgba(13, 245, 227, 0.5);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.85), 0 0 32px rgba(13, 245, 227, 0.2);
+        }
+
+        .dock-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 9999px;
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-main);
+        }
+
+        .dock-pill:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .dock-pill svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .dock-divider {
+            width: 1px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dock-live-status {
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--teal-luminous);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            letter-spacing: 0.5px;
+        }
+
+        .pulsing-orb {
+            width: 8px;
+            height: 8px;
+            background: var(--teal-luminous);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--teal-luminous);
+            animation: pulseTeal 1.5s infinite;
+        }
+
+        /* Responsive scaling */
+        @media (max-width: 1400px) {
+            .viewport-16-9 {
+                aspect-ratio: auto;
+                min-height: 100vh;
+                border-radius: 0;
+            }
+            .bento-canvas {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                margin-bottom: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 16:9 Desktop Viewport Canvas -->
+    <div class="viewport-16-9">
+
+        <!-- 1. FLOATING LEFT VERTICAL GLASSMORPHIC RAIL -->
+        <nav class="nav-rail">
+            <div class="nav-logo" title="E-Commerce Intelligence">
+                E-C
+            </div>
+
+            <div class="nav-items">
+                <button class="nav-btn active" title="Overview">
+                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span class="nav-tooltip">Overview</span>
+                </button>
+                <button class="nav-btn" title="Cohorts">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span class="nav-tooltip">Cohorts</span>
+                </button>
+                <button class="nav-btn" title="RFM Matrix">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+                    <span class="nav-tooltip">RFM Matrix</span>
+                </button>
+                <button class="nav-btn" title="Funnels">
+                    <svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    <span class="nav-tooltip">Funnels</span>
+                </button>
+                <button class="nav-btn" title="Geo-Pulse">
+                    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span class="nav-tooltip">Geo-Pulse</span>
+                </button>
+            </div>
+
+            <div class="nav-bottom">
+                <button class="nav-btn" title="Settings">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span class="nav-tooltip">Settings</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- 2. MINIMAL HEADER BREADCRUMB -->
+        <header class="top-header">
+            <div class="header-title-group">
+                <div class="breadcrumb">
+                    Intelligence <span>/</span> Overview
+                </div>
+                <div class="system-title">
+                    E-COMMERCE CUSTOMER INTELLIGENCE
+                    <span class="version-badge">v4.0</span>
+                </div>
+            </div>
+
+            <div class="header-meta">
+                <div class="live-clock">
+                    <span class="live-dot"></span>
+                    <span id="systemClock">14:58</span> UTC
+                </div>
+                <div class="user-avatar-wrap">
+                    <div class="user-avatar">HV</div>
+                    <span class="user-name">Harsh V.</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 3. ASYMMETRIC BENTO GRID -->
+        <main class="bento-canvas">
+
+            <!-- FAR-LEFT COLUMN (40% width): Customer Cohort Retention Heatmap -->
+            <section class="bento-card col-left-heatmap">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-tag tag-teal"></div>
+                        <div>
+                            <div class="card-title">Customer Cohort Retention Heatmap</div>
+                            <div class="card-subtext">13-Month Retention Matrix (Normalized % Active)</div>
+                        </div>
+                    </div>
+                    <div class="trend-pill teal">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                        +3.4% Avg
+                    </div>
+                </div>
+
+                <div class="heatmap-matrix-wrap" id="cohortHeatmapContainer">
+                    <!-- Column Headers -->
+                    <div class="heatmap-header-row">
+                        <span>Cohort</span>
+                        <span>Mo 0</span><span>Mo 1</span><span>Mo 2</span><span>Mo 3</span>
+                        <span>Mo 4</span><span>Mo 5</span><span>Mo 6</span><span>Mo 7</span>
+                        <span>Mo 8</span><span>Mo 9</span><span>Mo 10</span><span>Mo 11</span>
+                    </div>
+
+                    <!-- 13 Cohort Rows generated with calibrated emerald/violet intensity tiles -->
+                    <div id="cohortRows"></div>
+                </div>
+
+                <div class="heatmap-legend">
+                    <span>Intensity: Low (&lt;15%) to High (&gt;75%)</span>
+                    <div class="legend-gradient-bar"></div>
+                    <span>N = 96,096 Customers</span>
+                </div>
+            </section>
+
+            <!-- MIDDLE-CENTER COLUMN (35% width): CLV & Revenue Trajectory -->
+            <section class="bento-card col-mid-clv">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-tag tag-violet"></div>
+                        <div>
+                            <div class="card-title">CLV & Revenue Trajectory</div>
+                            <div class="card-subtext">Volumetric 3D Splines & Retention Payback Curve</div>
+                        </div>
+                    </div>
+                    <div class="trend-pill violet">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                        +28.4% YoY
+                    </div>
+                </div>
+
+                <div class="clv-chart-container">
+                    <canvas id="clvTrajectoryChart"></canvas>
+                    
+                    <!-- Floating Frosted Glass Tooltip Anchored at Mo 6 -->
+                    <div class="floating-peak-tooltip">
+                        <div class="tooltip-badge">
+                            <span class="live-dot" style="width:5px; height:5px;"></span> Mo 6 Milestone
+                        </div>
+                        <div class="tooltip-val">$3,250 CLV</div>
+                        <div class="tooltip-sub">Trajectory: Accelerating (2.1x CAC)</div>
+                    </div>
+                </div>
+
+                <div class="clv-metrics-strip">
+                    <div class="metric-cell">
+                        <span class="metric-label">Avg Lifetime</span>
+                        <span class="metric-value">14.8 Mo</span>
+                        <span class="metric-delta">+12.2% YoY</span>
+                    </div>
+                    <div class="metric-cell">
+                        <span class="metric-label">Rev Velocity</span>
+                        <span class="metric-value">$148.60/d</span>
+                        <span class="metric-delta">+18.5% MoM</span>
+                    </div>
+                    <div class="metric-cell">
+                        <span class="metric-label">CAC Payback</span>
+                        <span class="metric-value">2.1 Mo</span>
+                        <span class="metric-delta">-0.4 Mo Fast</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TOP-RIGHT & STACKED COLUMN (25% width) -->
+            <div class="col-right-stack">
+
+                <!-- Widget 1: RFM Customer Segmentation -->
+                <section class="bento-card card-rfm">
+                    <div class="card-header" style="margin-bottom: 8px;">
+                        <div class="card-title-wrap">
+                            <div class="card-tag tag-amber"></div>
+                            <div>
+                                <div class="card-title">RFM Segmentation</div>
+                                <div class="card-subtext">Value Distribution</div>
+                            </div>
+                        </div>
+                        <span class="trend-pill amber" style="font-size:9.5px; padding:2px 6px;">7 Clusters</span>
+                    </div>
+
+                    <div class="rfm-content-grid">
+                        <div class="rfm-donut-wrap">
+                            <canvas id="rfmDonutCanvas"></canvas>
+                            <div class="donut-center-stat">
+                                <span class="donut-center-num">96.1k</span>
+                                <span class="donut-center-lbl">Users</span>
+                            </div>
+                        </div>
+
+                        <div class="rfm-legend-list">
+                            <div class="rfm-legend-item">
+                                <span class="rfm-item-title"><span class="rfm-color-dot" style="background:#0DF5E3;"></span> Champions</span>
+                                <span class="rfm-item-pct">32%</span>
+                            </div>
+                            <div class="rfm-legend-item">
+                                <span class="rfm-item-title"><span class="rfm-color-dot" style="background:#8B5CFF;"></span> Loyalists</span>
+                                <span class="rfm-item-pct">28%</span>
+                            </div>
+                            <div class="rfm-legend-item">
+                                <span class="rfm-item-title"><span class="rfm-color-dot" style="background:#FFB800;"></span> At Risk</span>
+                                <span class="rfm-item-pct">14%</span>
+                            </div>
+                            <div class="rfm-legend-item">
+                                <span class="rfm-item-title"><span class="rfm-color-dot" style="background:#4E4E61;"></span> Lost / Inactive</span>
+                                <span class="rfm-item-pct">16%</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Widget 2: Conversion Funnel -->
+                <section class="bento-card card-funnel">
+                    <div class="card-header" style="margin-bottom: 8px;">
+                        <div class="card-title-wrap">
+                            <div class="card-tag tag-teal"></div>
+                            <div>
+                                <div class="card-title">Conversion Funnel</div>
+                                <div class="card-subtext">Step Drop-off Flow</div>
+                            </div>
+                        </div>
+                        <span class="trend-pill teal" style="font-size:9.5px; padding:2px 6px;">18% Final</span>
+                    </div>
+
+                    <div class="funnel-steps-wrap">
+                        <div class="funnel-step">
+                            <div class="funnel-step-meta">
+                                <span>1. Visit</span>
+                                <span style="font-family:var(--font-mono);">100% (1.24M)</span>
+                            </div>
+                            <div class="funnel-bar-track">
+                                <div class="funnel-bar-fill" style="width:100%; background:linear-gradient(90deg, #0DF5E3, #8B5CFF);"></div>
+                            </div>
+                        </div>
+                        <div class="funnel-step">
+                            <div class="funnel-step-meta">
+                                <span>2. Add to Cart</span>
+                                <span class="funnel-warn">⚠ -52% Drop</span>
+                                <span style="font-family:var(--font-mono);">48% (595k)</span>
+                            </div>
+                            <div class="funnel-bar-track">
+                                <div class="funnel-bar-fill" style="width:48%; background:linear-gradient(90deg, #0DF5E3, #8B5CFF);"></div>
+                            </div>
+                        </div>
+                        <div class="funnel-step">
+                            <div class="funnel-step-meta">
+                                <span>3. Checkout</span>
+                                <span style="font-family:var(--font-mono);">32% (397k)</span>
+                            </div>
+                            <div class="funnel-bar-track">
+                                <div class="funnel-bar-fill" style="width:32%; background:linear-gradient(90deg, #0DF5E3, #8B5CFF);"></div>
+                            </div>
+                        </div>
+                        <div class="funnel-step">
+                            <div class="funnel-step-meta">
+                                <span>4. Purchase</span>
+                                <span class="funnel-warn">⚠ -43% Cart</span>
+                                <span style="font-family:var(--font-mono); color:var(--teal-luminous);">18% (223k)</span>
+                            </div>
+                            <div class="funnel-bar-track">
+                                <div class="funnel-bar-fill" style="width:18%; background:linear-gradient(90deg, #0DF5E3, #0DF5E3); box-shadow: 0 0 10px rgba(13,245,227,0.5);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Widget 3: Top VIP Customer Personas Leaderboard -->
+                <section class="bento-card card-vip">
+                    <div class="card-header" style="margin-bottom: 6px;">
+                        <div class="card-title-wrap">
+                            <div class="card-tag tag-violet"></div>
+                            <div>
+                                <div class="card-title">Top VIP Personas</div>
+                                <div class="card-subtext">Lifetime Value Rank</div>
+                            </div>
+                        </div>
+                        <span class="trend-pill violet" style="font-size:9.5px; padding:2px 6px;">Tier 1</span>
+                    </div>
+
+                    <div class="vip-list">
+                        <!-- VIP 1 -->
+                        <div class="vip-item">
+                            <div class="vip-left">
+                                <div class="vip-avatar" style="background-image: url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60');"></div>
+                                <div class="vip-info">
+                                    <span class="vip-name">#1 Marc V.</span>
+                                    <span class="vip-tag">Champions • 42 Orders</span>
+                                </div>
+                            </div>
+                            <div class="vip-right">
+                                <span class="vip-spend">$24,850</span>
+                                <div class="vip-micro-bar"><div class="vip-micro-fill" style="width:100%;"></div></div>
+                            </div>
+                        </div>
+
+                        <!-- VIP 2 -->
+                        <div class="vip-item">
+                            <div class="vip-left">
+                                <div class="vip-avatar" style="background-image: url('https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=60');"></div>
+                                <div class="vip-info">
+                                    <span class="vip-name">#2 Jessica T.</span>
+                                    <span class="vip-tag" style="color:var(--amber-warm);">High Spender • 31 Orders</span>
+                                </div>
+                            </div>
+                            <div class="vip-right">
+                                <span class="vip-spend">$19,230</span>
+                                <div class="vip-micro-bar"><div class="vip-micro-fill" style="width:78%;"></div></div>
+                            </div>
+                        </div>
+
+                        <!-- VIP 3 -->
+                        <div class="vip-item">
+                            <div class="vip-left">
+                                <div class="vip-avatar" style="background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=60');"></div>
+                                <div class="vip-info">
+                                    <span class="vip-name">#3 David K.</span>
+                                    <span class="vip-tag">Champions • 27 Orders</span>
+                                </div>
+                            </div>
+                            <div class="vip-right">
+                                <span class="vip-spend">$16,480</span>
+                                <div class="vip-micro-bar"><div class="vip-micro-fill" style="width:66%;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+
+        <!-- 4. FLOATING BOTTOM QUICK-ACTION COMMAND DOCK -->
+        <footer class="bottom-command-dock">
+            <div class="dock-pill">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                Date Range (Last 90 Days)
+            </div>
+            <div class="dock-pill">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                Region (All Global)
+            </div>
+            <div class="dock-pill">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Cohort Tier (All)
+            </div>
+
+            <div class="dock-divider"></div>
+
+            <div class="dock-live-status">
+                <span class="pulsing-orb"></span>
+                LIVE SYNC 100% ONLINE
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Scripts to build Cohort Matrix & Charts -->
+    <script>
+        // Real-world calibrated Cohort Retention Matrix Data (13 Cohorts x 12 Months)
+        const cohortData = [
+            { name: "Mo-0", rates: [100, 78, 54, 42, 36, 31, 28, 25, 23, 22, 20, 19] },
+            { name: "Mo-1", rates: [100, 76, 52, 40, 35, 30, 27, 24, 22, 21, 19, null] },
+            { name: "Mo-2", rates: [100, 79, 55, 43, 37, 32, 29, 26, 24, 23, null, null] },
+            { name: "Mo-3", rates: [100, 77, 51, 39, 34, 29, 26, 23, 21, null, null, null] },
+            { name: "Mo-4", rates: [100, 81, 56, 44, 38, 33, 30, 27, null, null, null, null] },
+            { name: "Mo-5", rates: [100, 80, 54, 41, 36, 31, 28, null, null, null, null, null] },
+            { name: "Mo-6", rates: [100, 82, 58, 45, 39, 34, null, null, null, null, null, null] },
+            { name: "Mo-7", rates: [100, 79, 53, 42, 36, null, null, null, null, null, null, null] },
+            { name: "Mo-8", rates: [100, 83, 59, 46, null, null, null, null, null, null, null, null] },
+            { name: "Mo-9", rates: [100, 81, 57, null, null, null, null, null, null, null, null, null] },
+            { name: "Mo-10", rates: [100, 84, null, null, null, null, null, null, null, null, null, null] },
+            { name: "Mo-11", rates: [100, null, null, null, null, null, null, null, null, null, null, null] },
+            { name: "Mo-12", rates: [100, null, null, null, null, null, null, null, null, null, null, null] }
+        ];
+
+        // Generate Cohort Matrix DOM
+        const rowsContainer = document.getElementById('cohortRows');
+        cohortData.forEach(cohort => {
+            const rowEl = document.createElement('div');
+            rowEl.className = 'heatmap-row';
+
+            const labelEl = document.createElement('span');
+            labelEl.className = 'heatmap-cohort-label';
+            labelEl.textContent = cohort.name;
+            rowEl.appendChild(labelEl);
+
+            cohort.rates.forEach((rate, idx) => {
+                const cell = document.createElement('div');
+                cell.className = 'heat-cell';
+
+                if (rate === null) {
+                    cell.style.background = 'rgba(255, 255, 255, 0.02)';
+                    cell.style.color = '#252532';
+                    cell.textContent = '·';
+                } else {
+                    cell.textContent = rate + '%';
+
+                    if (idx === 0) {
+                        // 100% baseline: deep luminous emerald
+                        cell.style.background = 'rgba(13, 245, 227, 0.85)';
+                        cell.style.color = '#0A0A0C';
+                    } else if (rate >= 60) {
+                        cell.style.background = 'rgba(13, 245, 227, 0.45)';
+                        cell.style.color = '#FFFFFF';
+                    } else if (rate >= 40) {
+                        cell.style.background = 'rgba(13, 245, 227, 0.25)';
+                        cell.style.color = '#0DF5E3';
+                    } else if (rate >= 28) {
+                        cell.style.background = 'rgba(139, 92, 255, 0.35)';
+                        cell.style.color = '#E4E4EB';
+                    } else {
+                        cell.style.background = 'rgba(139, 92, 255, 0.16)';
+                        cell.style.color = '#8E8EA0';
+                    }
+
+                    cell.title = `${cohort.name} at Month ${idx}: ${rate}% retained`;
+                }
+
+                rowEl.appendChild(cell);
+            });
+
+            rowsContainer.appendChild(rowEl);
+        });
+
+        // -------------------------------------------------------------
+        // Initialize CLV & Revenue Trajectory 3D-effect Spline Chart
+        // -------------------------------------------------------------
+        const clvCtx = document.getElementById('clvTrajectoryChart').getContext('2d');
+        
+        // Custom Gradients
+        const gradTeal = clvCtx.createLinearGradient(0, 0, 0, 300);
+        gradTeal.addColorStop(0, 'rgba(13, 245, 227, 0.4)');
+        gradTeal.addColorStop(1, 'rgba(13, 245, 227, 0.0)');
+
+        const gradViolet = clvCtx.createLinearGradient(0, 0, 0, 300);
+        gradViolet.addColorStop(0, 'rgba(139, 92, 255, 0.45)');
+        gradViolet.addColorStop(1, 'rgba(139, 92, 255, 0.0)');
+
+        const months = ['Mo 0', 'Mo 2', 'Mo 4', 'Mo 6', 'Mo 8', 'Mo 10', 'Mo 12', 'Mo 14', 'Mo 16', 'Mo 18'];
+        const clvTrajectory = [450, 920, 1850, 3250, 4100, 4980, 5650, 6200, 6700, 7150];
+        const revTrajectory = [380, 780, 1420, 2410, 3100, 3750, 4200, 4650, 4950, 5280];
+
+        new Chart(clvCtx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Projected CLV ($)',
+                        data: clvTrajectory,
+                        borderColor: '#8B5CFF',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#8B5CFF',
+                        pointBorderColor: '#0A0A0C',
+                        pointBorderWidth: 2,
+                        pointRadius: [3, 3, 3, 7, 3, 3, 3, 3, 3, 4],
+                        pointHoverRadius: 8,
+                        tension: 0.42,
+                        fill: true,
+                        backgroundColor: gradViolet
+                    },
+                    {
+                        label: 'Actual Revenue Trajectory ($)',
+                        data: revTrajectory,
+                        borderColor: '#0DF5E3',
+                        borderWidth: 2.5,
+                        borderDash: [4, 4],
+                        pointBackgroundColor: '#0DF5E3',
+                        pointBorderColor: '#0A0A0C',
+                        pointBorderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                        tension: 0.42,
+                        fill: true,
+                        backgroundColor: gradTeal
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            color: '#8E8EA0',
+                            font: { family: 'JetBrains Mono', size: 10 },
+                            boxWidth: 12,
+                            boxHeight: 12,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(17, 17, 22, 0.95)',
+                        titleColor: '#0DF5E3',
+                        bodyColor: '#FFFFFF',
+                        borderColor: '#1D1D26',
+                        borderWidth: 1,
+                        padding: 10,
+                        titleFont: { family: 'JetBrains Mono', size: 11 },
+                        bodyFont: { family: 'Inter', size: 11 }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(29, 29, 38, 0.55)' },
+                        ticks: { color: '#6E6E82', font: { family: 'JetBrains Mono', size: 10 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(29, 29, 38, 0.55)' },
+                        ticks: {
+                            color: '#6E6E82',
+                            font: { family: 'JetBrains Mono', size: 10 },
+                            callback: v => '$' + v.toLocaleString()
+                        }
+                    }
+                }
+            }
+        });
+
+        // -------------------------------------------------------------
+        // Initialize RFM Donut / Sunburst Multi-Tier Chart
+        // -------------------------------------------------------------
+        const rfmCtx = document.getElementById('rfmDonutCanvas').getContext('2d');
+        new Chart(rfmCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Champions (32%)', 'Loyalists (28%)', 'At Risk (14%)', 'Lost (16%)', 'Others (10%)'],
+                datasets: [{
+                    data: [32, 28, 14, 16, 10],
+                    backgroundColor: [
+                        '#0DF5E3',
+                        '#8B5CFF',
+                        '#FFB800',
+                        '#2E2E3C',
+                        '#1F1F2B'
+                    ],
+                    borderColor: '#111116',
+                    borderWidth: 2.5,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '72%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(17, 17, 22, 0.95)',
+                        titleColor: '#0DF5E3',
+                        bodyColor: '#FFFFFF',
+                        borderColor: '#1D1D26',
+                        borderWidth: 1,
+                        padding: 8
+                    }
+                }
+            }
+        });
+
+        // Live system clock updater
+        function updateClock() {
+            const now = new Date();
+            const hrs = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            const el = document.getElementById('systemClock');
+            if (el) el.textContent = `${hrs}:${mins}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>

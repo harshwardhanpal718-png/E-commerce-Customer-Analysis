@@ -165,10 +165,10 @@ def clean_all_data():
     print("\n[7/8] Processing Order Payments Dataset...")
     df_payments = pd.read_csv(os.path.join(raw_dir, 'olist_order_payments_dataset.csv'))
     
-    # Remove 3 records with 'not_defined' and $0 payment
+    # Remove 'not_defined' records and 0-value voucher tokens
     before_p = len(df_payments)
-    df_payments = df_payments[df_payments['payment_type'] != 'not_defined'].copy()
-    print(f"  -> Removed {before_p - len(df_payments)} 'not_defined' records with 0 value")
+    df_payments = df_payments[(df_payments['payment_type'] != 'not_defined') & (df_payments['payment_value'] > 0)].copy()
+    print(f"  -> Removed {before_p - len(df_payments)} invalid 0-value or 'not_defined' payment records")
     
     df_payments['payment_type_clean'] = (
         df_payments['payment_type']

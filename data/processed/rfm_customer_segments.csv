@@ -1,4 +1,4 @@
-customer_unique_id,last_order_date,frequency,monetary,recency,R_score,F_score,M_score,RFM_Score_Str,segment
+customer_unique_id,last_order_date,frequency,monetary,recency,R_score,F_score,M_score,RFM_Score,segment
 0000366f3b9a7992bf8c76cfdf3221e2,2018-05-10 10:56:27,1,141.9,112,4,1,4,414,Potential Loyalists
 0000b849f77a49e4a4ce2b2a4ca5be3f,2018-05-07 11:11:27,1,27.19,115,4,1,1,411,New Customers
 0000f46a3911fa3c0805444483337064,2017-03-10 21:05:03,1,86.22,537,1,1,2,112,Hibernating
