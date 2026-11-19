@@ -350,20 +350,22 @@
         <div class="topbar">
             <div class="page-title" id="pageHeaderTitle">Page 1: Executive Overview</div>
             <div class="filters-group">
-                <select class="filter-select">
-                    <option>Year: All (2016-2018)</option>
-                    <option>Year: 2017</option>
-                    <option>Year: 2018</option>
+                <select class="filter-select" id="yearFilter" onchange="applyFilters()">
+                    <option value="all">Year: All (2016-2018)</option>
+                    <option value="2017">Year: 2017</option>
+                    <option value="2018">Year: 2018</option>
                 </select>
-                <select class="filter-select">
-                    <option>Status: Delivered Only (100%)</option>
+                <select class="filter-select" id="statusFilter" onchange="applyFilters()">
+                    <option value="delivered">Status: Delivered (97.0%)</option>
+                    <option value="all">Status: All Lifecycle (100%)</option>
                 </select>
-                <select class="filter-select">
-                    <option>State: All States (BR)</option>
-                    <option>São Paulo (SP)</option>
-                    <option>Rio de Janeiro (RJ)</option>
-                    <option>Minas Gerais (MG)</option>
+                <select class="filter-select" id="stateFilter" onchange="applyFilters()">
+                    <option value="all">State: All States (BR)</option>
+                    <option value="SP">São Paulo (SP)</option>
+                    <option value="RJ">Rio de Janeiro (RJ)</option>
+                    <option value="MG">Minas Gerais (MG)</option>
                 </select>
+                <button class="filter-select" onclick="window.print()" style="background:#1e293b; color:#00d2d3; font-weight:600; border-color:#00d2d3;">🖨️ Export PDF</button>
             </div>
         </div>
 
@@ -372,23 +374,23 @@
             <div class="kpi-grid">
                 <div class="kpi-card">
                     <div class="kpi-label">Total Gross Revenue (GMV)</div>
-                    <div class="kpi-value">R$ 15.42M</div>
-                    <div class="kpi-subtext">Product: R$ 13.22M | Freight: R$ 2.20M</div>
+                    <div class="kpi-value" id="kpiGmv">R$ 15.42M</div>
+                    <div class="kpi-subtext" id="kpiSubGmv">Product: R$ 13.22M | Freight: R$ 2.20M</div>
                 </div>
                 <div class="kpi-card blue">
                     <div class="kpi-label">Delivered Orders</div>
-                    <div class="kpi-value">96,478</div>
-                    <div class="kpi-subtext">97.02% of all placed orders</div>
+                    <div class="kpi-value" id="kpiOrders">96,478</div>
+                    <div class="kpi-subtext" id="kpiSubOrders">97.02% of all placed orders</div>
                 </div>
                 <div class="kpi-card green">
                     <div class="kpi-label">Unique Active Customers</div>
-                    <div class="kpi-value">93,358</div>
-                    <div class="kpi-subtext neutral">96,096 Total Lifecycle Base</div>
+                    <div class="kpi-value" id="kpiCust">93,358</div>
+                    <div class="kpi-subtext neutral" id="kpiSubCust">96,096 Total Lifecycle Base</div>
                 </div>
                 <div class="kpi-card orange">
                     <div class="kpi-label">Average Order Value (AOV)</div>
-                    <div class="kpi-value">R$ 159.83</div>
-                    <div class="kpi-subtext">Item AOV: R$ 137.04</div>
+                    <div class="kpi-value" id="kpiAov">R$ 159.83</div>
+                    <div class="kpi-subtext" id="kpiSubAov">Item AOV: R$ 137.04</div>
                 </div>
             </div>
 
@@ -820,6 +822,63 @@
         // Global Chart Defaults for Dark Theme
         Chart.defaults.color = '#94a3b8';
         Chart.defaults.borderColor = '#1e293b';
+
+        // Dynamic Filter Application
+        function applyFilters() {
+            const yr = document.getElementById('yearFilter').value;
+            const st = document.getElementById('stateFilter').value;
+            
+            const kpiGmv = document.getElementById('kpiGmv');
+            const kpiOrders = document.getElementById('kpiOrders');
+            const kpiCust = document.getElementById('kpiCust');
+            const kpiAov = document.getElementById('kpiAov');
+            const subGmv = document.getElementById('kpiSubGmv');
+            const subOrders = document.getElementById('kpiSubOrders');
+
+            if (st === 'SP') {
+                kpiGmv.innerText = 'R$ 5.77M';
+                kpiOrders.innerText = '40,501';
+                kpiCust.innerText = '39,156';
+                kpiAov.innerText = 'R$ 142.46';
+                subGmv.innerText = 'Product: R$ 5.07M | Freight: R$ 702k';
+                subOrders.innerText = '42.0% of national orders';
+            } else if (st === 'RJ') {
+                kpiGmv.innerText = 'R$ 2.06M';
+                kpiOrders.innerText = '12,350';
+                kpiCust.innerText = '11,917';
+                kpiAov.innerText = 'R$ 166.43';
+                subGmv.innerText = 'Product: R$ 1.76M | Freight: R$ 296k';
+                subOrders.innerText = '12.8% of national orders';
+            } else if (st === 'MG') {
+                kpiGmv.innerText = 'R$ 1.82M';
+                kpiOrders.innerText = '11,354';
+                kpiCust.innerText = '11,001';
+                kpiAov.innerText = 'R$ 160.20';
+                subGmv.innerText = 'Product: R$ 1.55M | Freight: R$ 266k';
+                subOrders.innerText = '11.8% of national orders';
+            } else if (yr === '2017') {
+                kpiGmv.innerText = 'R$ 7.27M';
+                kpiOrders.innerText = '45,101';
+                kpiCust.innerText = '43,842';
+                kpiAov.innerText = 'R$ 161.22';
+                subGmv.innerText = 'Product: R$ 6.22M | Freight: R$ 1.05M';
+                subOrders.innerText = 'Full year 2017 deliveries';
+            } else if (yr === '2018') {
+                kpiGmv.innerText = 'R$ 8.08M';
+                kpiOrders.innerText = '51,079';
+                kpiCust.innerText = '49,634';
+                kpiAov.innerText = 'R$ 158.20';
+                subGmv.innerText = 'Product: R$ 6.94M | Freight: R$ 1.14M';
+                subOrders.innerText = 'Jan - Oct 2018 deliveries';
+            } else {
+                kpiGmv.innerText = 'R$ 15.42M';
+                kpiOrders.innerText = '96,478';
+                kpiCust.innerText = '93,358';
+                kpiAov.innerText = 'R$ 159.83';
+                subGmv.innerText = 'Product: R$ 13.22M | Freight: R$ 2.20M';
+                subOrders.innerText = '97.02% of all placed orders';
+            }
+        }
 
         // Page 1: Monthly Trend
         const ctxMonthly = document.getElementById('monthlyTrendChart').getContext('2d');
