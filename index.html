@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce Customer Analysis Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #0A0A0C;
+            color: #E4E4EB;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background-image: 
+                radial-gradient(circle at 50% 20%, rgba(13, 245, 227, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 255, 0.08) 0%, transparent 60%);
+        }
+        .hub-container {
+            max-width: 960px;
+            width: 100%;
+            background: rgba(17, 17, 22, 0.85);
+            backdrop-filter: blur(24px);
+            border: 1px solid #1D1D26;
+            border-radius: 28px;
+            padding: 44px;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.85);
+            text-align: center;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(13, 245, 227, 0.1);
+            color: #0DF5E3;
+            border: 1px solid rgba(13, 245, 227, 0.3);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: 0.8px;
+        }
+        .pulse {
+            width: 8px; height: 8px; background: #0DF5E3; border-radius: 50%;
+            box-shadow: 0 0 10px #0DF5E3; animation: p 1.5s infinite;
+        }
+        @keyframes p { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; } }
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: #FFFFFF;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+        p.sub {
+            font-size: 15px;
+            color: #8E8EA0;
+            margin-bottom: 38px;
+            line-height: 1.5;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            text-align: left;
+        }
+        .hub-card {
+            background: rgba(25, 25, 33, 0.6);
+            border: 1px solid #1D1D26;
+            border-radius: 20px;
+            padding: 28px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .hub-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(13, 245, 227, 0.4);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 30px rgba(13, 245, 227, 0.15);
+            background: rgba(30, 30, 42, 0.8);
+        }
+        .hub-card.secondary:hover {
+            border-color: rgba(139, 92, 255, 0.4);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 30px rgba(139, 92, 255, 0.15);
+        }
+        .card-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: inline-block;
+        }
+        .tag-teal { color: #0DF5E3; }
+        .tag-violet { color: #8B5CFF; }
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 10px;
+        }
+        .card-desc {
+            font-size: 13px;
+            color: #8E8EA0;
+            line-height: 1.5;
+            margin-bottom: 22px;
+        }
+        .card-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #0DF5E3;
+            margin-top: auto;
+        }
+        .hub-card.secondary .card-cta { color: #8B5CFF; }
+        .footer-note {
+            margin-top: 36px;
+            font-size: 12px;
+            color: #555566;
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="hub-container">
+        <div class="badge">
+            <span class="pulse"></span>
+            LOCAL SERVER ACTIVE • PORT 8080
+        </div>
+        <h1>E-Commerce Customer Analysis Portal</h1>
+        <p class="sub">Choose your preferred dashboard experience. Built with real Olist Brazilian E-Commerce data (96,096 customers, 99,441 orders, R$ 15.42M GMV).</p>
+
+        <div class="cards-grid">
+            <!-- Card 1: Bento 16:9 v4.0 -->
+            <a href="dashboards/customer_intelligence_v4.html" class="hub-card">
+                <div>
+                    <span class="card-tag tag-teal">FLAGSHIP • 16:9 BENTO GRID</span>
+                    <div class="card-title">Customer Intelligence v4.0</div>
+                    <div class="card-desc">Asymmetric glassmorphic bento cockpit featuring 13-month Cohort Retention Heatmap, volumetric CLV & Revenue Trajectory 3D splines, concentric RFM ring, conversion funnel, and VIP Personas leaderboard.</div>
+                </div>
+                <div class="card-cta">
+                    Open Bento Cockpit →
+                </div>
+            </a>
+
+            <!-- Card 2: Power BI Executive Suite -->
+            <a href="dashboards/interactive_powerbi_dashboard.html" class="hub-card secondary">
+                <div>
+                    <span class="card-tag tag-violet">EXECUTIVE SUITE • 6 PAGES</span>
+                    <div class="card-title">Power BI Executive Cockpit</div>
+                    <div class="card-desc">Full 6-page analytics suite with dynamic Year & State slicers, RFM customer clustering, logistics & review score bottlenecks, payment breakdown, and an interactive What-If Scenario ROI simulator.</div>
+                </div>
+                <div class="card-cta">
+                    Open Executive Suite →
+                </div>
+            </a>
+        </div>
+
+        <div class="footer-note">
+            Auto-served at http://localhost:8080/ • Olist Brazilian E-Commerce Analysis Suite
+        </div>
+    </div>
+</body>
+</html>
